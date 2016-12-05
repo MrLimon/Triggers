@@ -29,12 +29,7 @@ public with sharing class ContactHandler implements ITrigger{
 	 * trigger. Never execute any SOQL/SOSL etc in this and other iterative methods.
 	 */
 	public void beforeInsert(){
-		contactList = trigger.new;
-		for(Contact contactIterator : contactList){
-			if(contactIterator.Contact_Count__c < 0){
-				contactIterator.addError('err');
-			}
-		}
+		
 	}
 
 	/**
@@ -63,7 +58,6 @@ public with sharing class ContactHandler implements ITrigger{
 	public void afterInsert(){
 		List<Account> accountList = new List<Account>();
 		contactList = trigger.new;
-		System.debug(contactList);
 		idList = new List<Id>();
 		/*key - Account's Id
           value - Account's count of contacts
@@ -73,32 +67,15 @@ public with sharing class ContactHandler implements ITrigger{
 
 		for(Contact contactIterator : contactList)
 		{
-			/*if(mapId.get(contactIterator.AccountId) == null)
-			{
-				System.debug('test1');
-				mapId.put(contactIterator.AccountId, 1);
-				System.debug('test2');
-			}
-			else
-			{
-				System.debug('test3');
-				Integer newValue = mapId.get(contactIterator.AccountId)+1;
-				mapId.put(contactIterator.AccountId, newValue);
-				System.debug('test4');
-			}*/
 			accSet.add(contactIterator.AccountId);
 		}
-
-		//Set<Id> keysSet = mapId.keySet();
-		//System.debug(keysSet);
 		accountList = [select Id, Contact_Count__c, (select Id from Contacts) from Account where Account.Id IN:(accSet)];
 
-		for(Account acc : accountList){
+		for(Account acc : accountList)
+		{
 			 acc.Contact_Count__c = acc.Contacts.size();
 		}
-
 		update accountList;
-		System.debug('finish');
 		contactList = null;
 		idList = null;
 	}
@@ -113,8 +90,6 @@ public with sharing class ContactHandler implements ITrigger{
 		contactList = trigger.new;
 		List<Contact> contactListOld = trigger.old;
 		Set<Id> accountSet = new Set<Id>();
-		//System.debug(contactList);
-		//System.debug(contactListOld);
 		for(Integer i = 0; i<contactList.size(); i++){
 			if(contactList.get(i).AccountId != contactListOld.get(i).AccountId){
 				accountSet.add(contactList.get(i).AccountId);
@@ -125,12 +100,10 @@ public with sharing class ContactHandler implements ITrigger{
 		}
 		System.debug(accountSet);
 		List<Account> accountList =  [select Id, Contact_Count__c, (select Id from Contacts) from Account where Account.Id IN:(accountSet)];
-		System.debug(accountList);
 		for(Account accountIterator : accountList){
 			 accountIterator.Contact_Count__c = accountIterator.Contacts.size();
 		}
 		update accountList;
-		System.debug('finish');
 		contactList = null;
 		idList = null;
 
@@ -145,7 +118,6 @@ public with sharing class ContactHandler implements ITrigger{
 	public void afterDelete(){
 		List<Account> accountList = new List<Account>();
 		contactList = trigger.old;
-		System.debug(contactList);
 		idList = new List<Id>();
 		/*key - Account's Id
           value - Account's count of contacts
@@ -155,32 +127,13 @@ public with sharing class ContactHandler implements ITrigger{
 
 		for(Contact contactIterator : contactList)
 		{
-			/*if(mapId.get(contactIterator.AccountId) == null)
-			{
-				System.debug('test1');
-				mapId.put(contactIterator.AccountId, 1);
-				System.debug('test2');
-			}
-			else
-			{
-				System.debug('test3');
-				Integer newValue = mapId.get(contactIterator.AccountId)+1;
-				mapId.put(contactIterator.AccountId, newValue);
-				System.debug('test4');
-			}*/
 			accSet.add(contactIterator.AccountId);
 		}
-
-		//Set<Id> keysSet = mapId.keySet();
-		//System.debug(keysSet);
 		accountList = [select Id, Contact_Count__c, (select Id from Contacts) from Account where Account.Id IN:(accSet)];
-
 		for(Account acc : accountList){
 			 acc.Contact_Count__c = acc.Contacts.size();
 		}
-
 		update accountList;
-		System.debug('finish');
 		contactList = null;
 		idList = null;
 	
