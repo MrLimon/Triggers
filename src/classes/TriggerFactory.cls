@@ -45,26 +45,23 @@ public with sharing class TriggerFactory
 			// Iterate through the records to be deleted passing them to the handler.
 			if (Trigger.isDelete)
 			{
-				//for (SObject so : Trigger.old)
-				//{
+				
 					handler.beforeDelete();
-				//}
+				
 			}
 			// Iterate through the records to be inserted passing them to the handler.
 			else if (Trigger.isInsert)
 			{
-				//for (SObject so : Trigger.new)
-				//{
+				
 					handler.beforeInsert();
-				//}
+				
 			}
 			// Iterate through the records to be updated passing them to the handler.
 			else if (Trigger.isUpdate)
 			{
-				//for (SObject so : Trigger.old)
-				//{
+				
 					handler.beforeUpdate();//so, Trigger.newMap.get(so.Id));
-				//}
+				
 			}
 		}
 		else
@@ -75,26 +72,26 @@ public with sharing class TriggerFactory
 			// Iterate through the records deleted passing them to the handler.
 			if (Trigger.isDelete)
 			{
-				//for (SObject so : Trigger.old)
-				//{
+				
 					handler.afterDelete();
-				//}
+				
 			}
 			// Iterate through the records inserted passing them to the handler.
 			else if (Trigger.isInsert)
-			{
-				//for (SObject so : Trigger.new)
-				//{
+			{			
 					handler.afterInsert();
-				//}
 			}
 			// Iterate through the records updated passing them to the handler.
 			else if (Trigger.isUpdate)
 			{
-				//for (SObject so : Trigger.old)
-				///{
-					handler.afterUpdate();//so, Trigger.newMap.get(so.Id));
-				//}
+				
+				
+					handler.afterUpdate();
+				
+			}
+			else if(Trigger.isUndelete){
+
+				handler.afterUndelete();
 			}
 		}
 		
@@ -116,10 +113,10 @@ public with sharing class TriggerFactory
 
 		if (soType == Track__c.sObjectType)
 		{
-			return new TrackHandler();
+			//return new TrackHandler();
 		}
 		if(soType == Song__c.sObjectType){
-			return new SongHandler();
+			//return new SongHandler();
 		}
 		if(soType == Contact.sObjectType){
 			return new ContactHandler();

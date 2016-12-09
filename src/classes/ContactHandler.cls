@@ -55,29 +55,17 @@ public with sharing class ContactHandler implements ITrigger{
 	 * trigger. Always put field validation in the 'After' methods in case another trigger
 	 * has modified any values. The record is 'read only' by this point.
 	 */
-	 public void afterInsert(){
-	 	List<Account> accountList = new List<Account>();
+	 public void afterInsert()
+	 {
 	 	contactList = trigger.new;
 	 	Map<Id, Account> accountMap = new Map<Id, Account>();
 	 	for(Contact contactIterator : contactList)
 	 	{
-            accountMap.put(contactIterator.AccountId, new Account(Id = contactIterator.AccountId));
-        }
-        AggregateResult[] groupedResults = [select Account.Id, COUNT(Id) from Contact GROUP BY Account.Id];
-        for(AggregateResult res : groupedResults){
-        	Id accountId = (Id)res.get('Id');
-        	Integer countOfContacts = Integer.valueOf(String.valueOf(res.get('expr0')));
-        	if(accountMap.get(accountId) != null){
-        		accountMap.get(accountId).Contact_Count__c = (Decimal)countOfContacts;
-                accountList.add(accountMap.get(accountId));
-                accountMap.remove(accountId);
-             }
-         }
-  
-     update accountList;
-     contactList = null;
-     idList = null;
-      }
+	 		accountMap.put(contactIterator.AccountId, new Account(Id = contactIterator.AccountId));
+	 	}
+	 	updateRecords(accountMap);
+	 	contactList = null;
+	 }
 
 	/**
 	 * afterUpdate
@@ -85,28 +73,22 @@ public with sharing class ContactHandler implements ITrigger{
 	 * This method is called iteratively for each record updated during an AFTER
 	 * trigger.
 	 */
-	 public void afterUpdate(){
+	 public void afterUpdate()
+	 {
 	 	contactList = trigger.new;
 	 	List<Contact> contactListOld = trigger.old;
-	 	Set<Id> accountSet = new Set<Id>();
-	 	for(Integer i = 0; i<contactList.size(); i++){
-	 		if(contactList.get(i).AccountId != contactListOld.get(i).AccountId){
-	 			accountSet.add(contactList.get(i).AccountId);
-	 			accountSet.add(contactListOld.get(i).AccountId);
-	 			}else{
-
-	 			}
+	 	Map<Id, Account> accountMap = new Map<Id, Account>();
+	 	for(Integer i = 0; i<contactList.size(); i++)
+	 	{
+	 		if(contactList.get(i).AccountId != contactListOld.get(i).AccountId)
+	 		{
+	 			accountMap.put(contactList.get(i).AccountId, new Account(Id = contactList.get(i).AccountId));
+	 			accountMap.put(contactListOld.get(i).AccountId, new Account(Id = contactListOld.get(i).AccountId));
 	 		}
-	 		System.debug(accountSet);
-	 		List<Account> accountList =  [select Id, Contact_Count__c, (select Id from Contacts) from Account where Account.Id IN:(accountSet)];
-	 		for(Account accountIterator : accountList){
-	 			accountIterator.Contact_Count__c = accountIterator.Contacts.size();
-	 		}
-	 		update accountList;
-	 		contactList = null;
-	 		idList = null;
-
 	 	}
+	 	updateRecords(accountMap);
+	 	contactList = null;
+	 }
 
 	/**
 	 * afterDelete
@@ -114,33 +96,27 @@ public with sharing class ContactHandler implements ITrigger{
 	 * This method is called iteratively for each record deleted during an AFTER
 	 * trigger.
 	 */
-	 public void afterDelete(){
-	 	List<Account> accountList = new List<Account>();
+	 public void afterDelete()
+	 {
 	 	contactList = trigger.old;
 	 	Map<Id, Account> accountMap = new Map<Id, Account>();
 	 	for(Contact contactIterator : contactList)
 	 	{
-            accountMap.put(contactIterator.AccountId, new Account(Id = contactIterator.AccountId));
-        }
-        AggregateResult[] groupedResults = [select Account.Id, COUNT(Id) from Contact GROUP BY Account.Id];
-        for(AggregateResult res : groupedResults){
-        	Id accountId = (Id)res.get('Id');
-        	Integer countOfContacts = Integer.valueOf(String.valueOf(res.get('expr0')));
-        	if(accountMap.get(accountId) != null){
-        		accountMap.get(accountId).Contact_Count__c = (Decimal)countOfContacts;
-                accountList.add(accountMap.get(accountId));
-                accountMap.remove(accountId);
-             }
-         }
-         for(Account accountIterator : accountMap.values()){
-         	accountIterator.Contact_Count__c = 0;
-         	accountList.add(accountIterator);
-         }
-     update accountList;
-     contactList = null;
-     idList = null;
+	 		accountMap.put(contactIterator.AccountId, new Account(Id = contactIterator.AccountId));
+	 	}
+	 	updateRecords(accountMap);
+	 }
 
- }
+	public void afterUndelete(){
+		contactList = trigger.new;
+	 	Map<Id, Account> accountMap = new Map<Id, Account>();
+	 	for(Contact contactIterator : contactList)
+	 	{
+	 		accountMap.put(contactIterator.AccountId, new Account(Id = contactIterator.AccountId));
+	 	}
+	 	updateRecords(accountMap);
+	 	contactList = null;
+	}
 
 	/**
 	 * andFinally
@@ -149,4 +125,35 @@ public with sharing class ContactHandler implements ITrigger{
 	 * method to accomplish any final operations such as creation or updates of other records.
 	 */
 	 public void andFinally(){}
+
+
+	 public void updateRecords(Map<Id, Account> accountMap)
+	 {
+	 	List<Account> accountList = new List<Account>();
+	 	AggregateResult[] groupedResults = [select Account.Id, COUNT(Id) from Contact GROUP BY Account.Id];
+	 	for(AggregateResult res : groupedResults)
+	 	{
+	 		Id accountId = (Id)res.get('Id');
+	 		Integer countOfContacts = Integer.valueOf(String.valueOf(res.get('expr0')));
+	 		if(accountMap.get(accountId) != null)
+	 		{
+	 			accountMap.get(accountId).Contact_Count__c = (Decimal)countOfContacts;
+	 			accountList.add(accountMap.get(accountId));
+	 			accountMap.remove(accountId);
+	 		}
+	 	}
+	 	if(trigger.isAfter)
+	 	{
+	 		if(trigger.isDelete)
+	 		{
+	 			for(Account accountIterator : accountMap.values())
+	 			{
+	 				accountIterator.Contact_Count__c = 0;
+	 				accountList.add(accountIterator);
+	 			}
+	 		}
+	 	}
+
+	 	update accountList;
+	 }
 	}

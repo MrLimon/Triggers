@@ -65,6 +65,7 @@ public interface ITrigger
 	 */
 	 void afterDelete();
 
+	 void afterUndelete();
 	/**
 	 * andFinally
 	 *
@@ -72,4 +73,6 @@ public interface ITrigger
 	 * method to accomplish any final operations such as creation or updates of other records.
 	 */
 	 void andFinally();
+
+
 	}
